@@ -21,3 +21,27 @@ pnpm dev
 3. Ответ ассистента снова добавляется в `messages` с тем же лимитом.
 
 Список моделей: `lib/models.ts`. Подставь id из кабинета Polza.
+
+## Todo через файловую систему (Ollama tooling)
+
+Задачи лежат в `workdir/todo.json`. Модель меняет их через tools `list_files`, `read_file`, `write_file` (без БД).
+
+Нужны запущенные `ollama serve` и модель `llama3.2` (с tooling).
+
+```bash
+# список задач
+pnpm todo
+# или
+node scripts/todo-agent.mjs "покажи задачи"
+
+# добавить
+node scripts/todo-agent.mjs "добавь задачу: купить молоко"
+
+# отметить выполненной
+node scripts/todo-agent.mjs "отметь выполненным: купить молоко"
+
+# удалить
+node scripts/todo-agent.mjs "удали задачу купить молоко"
+```
+
+Общая логика tools: `lib/tools/fs-tools.ts`. Песочница — только `workdir/` (guard от `..`).
