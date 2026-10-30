@@ -1,12 +1,12 @@
 /**
- * Сценарий: модель llama3.2 через Ollama вызывает tool list_files
- * и получает список файлов в корне workdir.
+ * Сценарий: модель llama3.2 через Ollama вызывает tools list_files,
+ * read_file, write_file для работы с файлами внутри workdir.
  *
  * Запуск: node scripts/list-workdir.mjs
  * Нужны: ollama serve + ollama pull llama3.2
  */
 
-import { readdir } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const WORKDIR = path.join(ROOT, "workdir");
 const OLLAMA_URL = "http://127.0.0.1:11434/api/chat";
-const MODEL = "llama3.2";
+const MODEL = "qwen3.5:4b";
 
 const listFilesTool = {
   type: "function",
@@ -36,7 +36,51 @@ const listFilesTool = {
   },
 };
 
-async function listFiles(relativePath = ".") {
+const readFileTool = {
+  type: "function",
+  function: {
+    name: "read_file",
+    description:
+      "Читает текстовый файл внутри workdir и возвращает его содержимое.",
+    parameters: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "Относительный путь к файлу, например 'notes.txt'",
+        },
+      },
+      required: ["path"],
+    },
+  },
+};
+
+const writeFileTool = {
+  type: "function",
+  function: {
+    name: "write_file",
+    description:
+      "Записывает текст в файл внутри workdir (создаёт или перезаписывает).",
+    parameters: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "Относительный путь к файлу, например 'notes.txt'",
+        },
+        content: {
+          type: "string",
+          description: "Полное новое содержимое файла",
+        },
+      },
+      required: ["path", "content"],
+    },
+  },
+};
+
+const TOOLS = [listFilesTool, readFileTool, writeFileTool];
+
+function resolveInWorkdir(relativePath = ".") {
   const target = path.resolve(WORKDIR, relativePath || ".");
   const relative = path.relative(WORKDIR, target);
 
@@ -44,6 +88,11 @@ async function listFiles(relativePath = ".") {
     throw new Error("Путь должен быть внутри workdir");
   }
 
+  return target;
+}
+
+async function listFiles(relativePath = ".") {
+  const target = resolveInWorkdir(relativePath);
   const entries = await readdir(target, { withFileTypes: true });
 
   return entries
@@ -54,16 +103,80 @@ async function listFiles(relativePath = ".") {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-async function runListFilesTool(args) {
-  const parsed = typeof args === "string" ? JSON.parse(args || "{}") : args;
+async function readWorkdirFile(relativePath) {
+  if (!relativePath?.trim()) {
+    throw new Error("Нужен относительный путь к файлу");
+  }
+  const target = resolveInWorkdir(relativePath);
+  return readFile(target, "utf8");
+}
 
+async function writeWorkdirFile(relativePath, content) {
+  if (!relativePath?.trim()) {
+    throw new Error("Нужен относительный путь к файлу");
+  }
+  const target = resolveInWorkdir(relativePath);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, content, "utf8");
+}
+
+function parseArgs(args) {
+  return typeof args === "string" ? JSON.parse(args || "{}") : args;
+}
+
+async function runListFilesTool(args) {
   try {
+    const parsed = parseArgs(args);
     const files = await listFiles(parsed.path ?? ".");
     return JSON.stringify({ path: parsed.path ?? ".", files });
   } catch (error) {
     return JSON.stringify({
       error: error instanceof Error ? error.message : "Неизвестная ошибка",
     });
+  }
+}
+
+async function runReadFileTool(args) {
+  try {
+    const parsed = parseArgs(args);
+    const content = await readWorkdirFile(parsed.path ?? "");
+    return JSON.stringify({ path: parsed.path, content });
+  } catch (error) {
+    return JSON.stringify({
+      error: error instanceof Error ? error.message : "Неизвестная ошибка",
+    });
+  }
+}
+
+async function runWriteFileTool(args) {
+  try {
+    const parsed = parseArgs(args);
+    if (parsed.content === undefined) {
+      throw new Error("Нужен параметр content");
+    }
+    await writeWorkdirFile(parsed.path ?? "", parsed.content);
+    return JSON.stringify({
+      path: parsed.path,
+      ok: true,
+      bytes: Buffer.byteLength(parsed.content, "utf8"),
+    });
+  } catch (error) {
+    return JSON.stringify({
+      error: error instanceof Error ? error.message : "Неизвестная ошибка",
+    });
+  }
+}
+
+async function runTool(name, args) {
+  switch (name) {
+    case "list_files":
+      return runListFilesTool(args);
+    case "read_file":
+      return runReadFileTool(args);
+    case "write_file":
+      return runWriteFileTool(args);
+    default:
+      return JSON.stringify({ error: `Неизвестный tool: ${name}` });
   }
 }
 
@@ -74,7 +187,7 @@ async function chat(messages) {
     body: JSON.stringify({
       model: MODEL,
       messages,
-      tools: [listFilesTool],
+      tools: TOOLS,
       stream: false,
     }),
   });
@@ -93,8 +206,11 @@ async function main() {
     {
       role: "user",
       content:
-        "С помощью инструмента list_files получи список файлов в корне workdir " +
-        "(path: '.') и кратко перечисли, что там есть.",
+        // "С помощью инструмента list_files получи список файлов в корне workdir " +
+        // "(path: '.') и кратко перечисли, что там есть.",
+        // "Зампмши в файл hello.txt привет, мир!",
+        // `Добавь в todo лист задачу: погулять с котом.`
+        `как меня зовут? Посмотри в файлах`
     },
   ];
 
@@ -115,10 +231,7 @@ async function main() {
       const args = call.function?.arguments ?? {};
       console.log(`→ tool ${name}`, args);
 
-      const content =
-        name === "list_files"
-          ? await runListFilesTool(args)
-          : JSON.stringify({ error: `Неизвестный tool: ${name}` });
+      const content = await runTool(name, args);
 
       console.log("← результат:", content);
       messages.push({ role: "tool", content });
