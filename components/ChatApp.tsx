@@ -87,7 +87,8 @@ export function ChatApp() {
               Чат с выбором модели
             </h1>
             <p className="text-xs text-[var(--muted)]">
-              История до {MESSAGE_LIMIT} сообщений · дальше старые отбрасываются
+              История до {MESSAGE_LIMIT} сообщений · агент workdir ходит в
+              папку workdir через Ollama
             </p>
           </div>
 
@@ -113,8 +114,9 @@ export function ChatApp() {
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto pb-4">
           {messages.length === 0 && !error ? (
             <div className="m-auto max-w-sm rounded-2xl bg-[var(--panel)] px-5 py-4 text-center text-sm text-[var(--muted)] shadow-sm">
-              Напиши сообщение и отправь. В Polza уходит история до{" "}
-              {MESSAGE_LIMIT} последних сообщений.
+              Выбери модель и напиши сообщение. Для «Агент workdir» нужны
+              Ollama и папка workdir; остальные модели идут через Polza
+              (история до {MESSAGE_LIMIT} сообщений).
             </div>
           ) : null}
 

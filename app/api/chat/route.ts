@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { MESSAGE_LIMIT, type ChatMessage } from "@/lib/chat";
+import { isWorkdirAgentModel } from "@/lib/models";
+import { runWorkdirAgent } from "@/lib/workdir-agent";
 
 type ChatRequestBody = {
   model?: unknown;
@@ -57,40 +59,11 @@ function parseMessages(value: unknown): ChatMessage[] | null {
   return messages;
 }
 
-export async function POST(request: Request) {
-  const apiKey = process.env.POLZA_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "Нет POLZA_API_KEY в .env.local" },
-      { status: 500 },
-    );
-  }
-
-  let body: ChatRequestBody;
-
-  try {
-    body = (await request.json()) as ChatRequestBody;
-  } catch {
-    return NextResponse.json({ error: "Некорректный JSON" }, { status: 400 });
-  }
-
-  const model = typeof body.model === "string" ? body.model.trim() : "";
-  const messages = parseMessages(body.messages);
-
-  if (!model) {
-    return NextResponse.json({ error: "Выбери модель" }, { status: 400 });
-  }
-
-  if (!messages) {
-    return NextResponse.json(
-      {
-        error: `Нужен массив messages (1–${MESSAGE_LIMIT}), последнее — от пользователя`,
-      },
-      { status: 400 },
-    );
-  }
-
+async function replyWithPolza(
+  model: string,
+  messages: ChatMessage[],
+  apiKey: string,
+): Promise<NextResponse> {
   const polzaResponse = await fetch(
     "https://polza.ai/api/v1/chat/completions",
     {
@@ -119,7 +92,10 @@ export async function POST(request: Request) {
             ? "Модель сейчас недоступна, попробуй другую"
             : `Ошибка Polza (${polzaResponse.status})`);
 
-    return NextResponse.json({ error: message }, { status: polzaResponse.status });
+    return NextResponse.json(
+      { error: message },
+      { status: polzaResponse.status },
+    );
   }
 
   const reply = data.choices?.[0]?.message?.content?.trim();
@@ -132,4 +108,64 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ reply });
+}
+
+export async function POST(request: Request) {
+  let body: ChatRequestBody;
+
+  try {
+    body = (await request.json()) as ChatRequestBody;
+  } catch {
+    return NextResponse.json({ error: "Некорректный JSON" }, { status: 400 });
+  }
+
+  const model = typeof body.model === "string" ? body.model.trim() : "";
+  const messages = parseMessages(body.messages);
+
+  if (!model) {
+    return NextResponse.json({ error: "Выбери модель" }, { status: 400 });
+  }
+
+  if (!messages) {
+    return NextResponse.json(
+      {
+        error: `Нужен массив messages (1–${MESSAGE_LIMIT}), последнее — от пользователя`,
+      },
+      { status: 400 },
+    );
+  }
+
+  if (isWorkdirAgentModel(model)) {
+    try {
+      const reply = await runWorkdirAgent(messages);
+      return NextResponse.json({ reply });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Ошибка агента workdir";
+      const offline =
+        message.includes("fetch") ||
+        message.includes("ECONNREFUSED") ||
+        message.includes("Failed to fetch");
+
+      return NextResponse.json(
+        {
+          error: offline
+            ? "Не удалось подключиться к Ollama. Запусти ollama serve и нужную модель (по умолчанию qwen3.5:4b)."
+            : message,
+        },
+        { status: 502 },
+      );
+    }
+  }
+
+  const apiKey = process.env.POLZA_API_KEY;
+
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: "Нет POLZA_API_KEY в .env.local" },
+      { status: 500 },
+    );
+  }
+
+  return replyWithPolza(model, messages, apiKey);
 }
