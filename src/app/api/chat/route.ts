@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { MESSAGE_LIMIT, type ChatMessage } from "@/lib/chat";
-import { isWorkdirAgentModel } from "@/lib/models";
-import { runWorkdirAgent } from "@/lib/workdir-agent";
+import { MESSAGE_LIMIT } from "@entities/chat/model/constants";
+import type { ChatMessage } from "@entities/chat/model/types";
+import { isWorkdirAgentModel } from "@shared/lib/models";
+import { runWorkdirAgent } from "@shared/lib/workdir-agent";
 
 type ChatRequestBody = {
   model?: unknown;

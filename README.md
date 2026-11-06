@@ -1,6 +1,6 @@
 # Чат с выбором модели
 
-Учебный проект: Next.js + Polza.ai. Без Express и без базы. История диалога — в памяти клиента, лимит задаётся в `lib/chat.ts`.
+Учебный проект: Next.js + Polza.ai. Без Express и без базы. История диалога — в памяти клиента, лимит задаётся в `src/entities/chat/model/constants.ts`. Структура — FSD (`app` / `entities` / `shared`).
 
 ## Запуск
 
@@ -20,7 +20,7 @@ pnpm dev
 2. `POST /api/chat` принимает `{ model, messages }` и прокидывает их в Polza.
 3. Ответ ассистента снова добавляется в `messages` с тем же лимитом.
 
-Список моделей: `lib/models.ts`. Подставь id из кабинета Polza.
+Список моделей: `src/shared/lib/models.ts`. Подставь id из кабинета Polza.
 
 ## Todo через файловую систему (Ollama tooling)
 
@@ -44,4 +44,4 @@ node scripts/todo-agent.mjs "отметь выполненным: купить �
 node scripts/todo-agent.mjs "удали задачу купить молоко"
 ```
 
-Общая логика tools: `lib/tools/fs-tools.ts`. Песочница — только `workdir/` (guard от `..`).
+Общая логика tools: `src/shared/lib/tools/fs-tools.ts`. Песочница — только `workdir/` (guard от `..`).

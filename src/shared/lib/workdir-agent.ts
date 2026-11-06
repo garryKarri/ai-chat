@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import type { ChatMessage } from "@/lib/chat";
-import { runWorkdirTool, workdirTools } from "@/lib/tools/fs-tools";
+import type { ChatMessage } from "@entities/chat/model/types";
+import { runWorkdirTool, workdirTools } from "@shared/lib/tools/fs-tools";
 
 const OLLAMA_URL = "http://127.0.0.1:11434/api/chat";
 const MAX_ROUNDS = 8;

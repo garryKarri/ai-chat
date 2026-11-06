@@ -1,4 +1,4 @@
-/** @deprecated используй lib/tools/fs-tools.ts */
+/** @deprecated используй @shared/lib/tools/fs-tools */
 export {
   WORKDIR,
   listFiles,

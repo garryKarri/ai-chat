@@ -2,17 +2,19 @@
 
 import { FormEvent, useState } from "react";
 
-import { MESSAGE_LIMIT, trimMessages, type ChatMessage } from "@/lib/chat";
-import { MODELS } from "@/lib/models";
+import { MESSAGE_LIMIT } from "@entities/chat/model/constants";
+import { trimMessages } from "@entities/chat/model/lib/trimMessages";
+import type { ChatMessage } from "@entities/chat/model/types";
+import { MessageBubble } from "@entities/chat/ui/messageBubble/messageBubble";
+import { MODELS } from "@shared/lib/models";
 
-import { MessageBubble } from "./MessageBubble";
-import styles from "./ChatApp.module.scss";
+import styles from "./chatPage.module.scss";
 
 type UiMessage = ChatMessage & {
   modelLabel?: string;
 };
 
-export function ChatApp() {
+export function ChatPage() {
   const [modelId, setModelId] = useState(MODELS[0]?.id ?? "");
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<UiMessage[]>([]);
