@@ -44,3 +44,16 @@
   margin: 0;
   white-space: pre-wrap;
 }
+
+.content {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-top: 0.35rem;
+  border-radius: 0.5rem;
+}

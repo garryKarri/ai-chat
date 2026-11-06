@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 import { MESSAGE_LIMIT } from "@entities/chat/model/constants";
 import type { ChatMessage } from "@entities/chat/model/types";
-import { isWorkdirAgentModel } from "@shared/lib/models";
+import { runImageGenChat } from "@shared/lib/image-gen-chat";
+import { isImageGenModel, isWorkdirAgentModel } from "@shared/lib/models";
 import { runWorkdirAgent } from "@shared/lib/workdir-agent";
 
 type ChatRequestBody = {
@@ -156,6 +157,20 @@ export async function POST(request: Request) {
         },
         { status: 502 },
       );
+    }
+  }
+
+  if (isImageGenModel(model)) {
+    try {
+      const reply = await runImageGenChat(messages);
+      return NextResponse.json({ reply });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Ошибка генерации изображения";
+
+      return NextResponse.json({ error: message }, { status: 502 });
     }
   }
 
