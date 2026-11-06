@@ -43,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# сгенерированные картинки (stub в public/img/stub.png коммитим)
+/public/img/generated/*
+!/public/img/generated/.gitkeep

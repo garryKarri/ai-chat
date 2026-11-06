@@ -16,11 +16,29 @@ pnpm dev
 
 ## Как устроено
 
-1. Страница держит `messages` и обрезает до `MESSAGE_LIMIT` (сейчас 3).
-2. `POST /api/chat` принимает `{ model, messages }` и прокидывает их в Polza.
+1. Страница держит `messages` и обрезает до `MESSAGE_LIMIT` (сейчас 10).
+2. `POST /api/chat` принимает `{ model, messages }`. Модели Polza идут в Polza; пункт «Агент workdir» — локальный FS-агент через Ollama.
 3. Ответ ассистента снова добавляется в `messages` с тем же лимитом.
 
 Список моделей: `src/shared/lib/models.ts`. Подставь id из кабинета Polza.
+
+## Генерация картинки (hme_cl_6)
+
+Контракт тула: **промпт → URL**, без бинарника через LLM.
+
+Логика: `src/shared/lib/tools/image-gen.ts` → `POST https://polza.ai/api/v1/media` (модель по умолчанию Nano Banana `google/gemini-2.5-flash-image`), при `pending` — polling `GET /api/v1/media/{id}`, затем скачивание в `public/img/generated/` и возврат локального URL.
+
+Нужен `POLZA_API_KEY` в `.env.local`.
+
+```bash
+pnpm image "рыжий кот в космосе"
+# → { "url": "http://localhost:3000/img/generated/….png", "source": "polza", ... }
+
+IMAGE_GEN_MODE=stub pnpm image "без сети"
+# → http://localhost:3000/img/stub.png
+```
+
+Опционально позже: [Krita](https://krita.org) + AI Diffusion / ComfyUI как локальная альтернатива Polza.
 
 ## Todo через файловую систему (Ollama tooling)
 

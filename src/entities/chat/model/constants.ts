@@ -1,1 +1,2 @@
-export const MESSAGE_LIMIT = 3;
+/** Хвост истории, который фронт шлёт на бэкенд. На уроке 6 упирались в 3. */
+export const MESSAGE_LIMIT = 10;
