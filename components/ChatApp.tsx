@@ -6,6 +6,7 @@ import { MESSAGE_LIMIT, trimMessages, type ChatMessage } from "@/lib/chat";
 import { MODELS } from "@/lib/models";
 
 import { MessageBubble } from "./MessageBubble";
+import styles from "./ChatApp.module.scss";
 
 type UiMessage = ChatMessage & {
   modelLabel?: string;
@@ -79,23 +80,21 @@ export function ChatApp() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[var(--chat-bg)] text-[var(--foreground)]">
-      <header className="border-b border-[var(--line)] bg-[var(--panel)] px-4 py-3">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div className={styles.root}>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
           <div>
-            <h1 className="text-base font-semibold tracking-tight">
-              Чат с выбором модели
-            </h1>
-            <p className="text-xs text-[var(--muted)]">
+            <h1 className={styles.title}>Чат с выбором модели</h1>
+            <p className={styles.subtitle}>
               История до {MESSAGE_LIMIT} сообщений · агент workdir ходит в
               папку workdir через Ollama
             </p>
           </div>
 
-          <label className="flex items-center gap-2 text-sm">
-            <span className="text-[var(--muted)]">Модель</span>
+          <label className={styles.modelLabel}>
+            <span className={styles.modelLabelText}>Модель</span>
             <select
-              className="rounded-lg border border-[var(--line)] bg-white px-2.5 py-1.5 text-sm outline-none focus:border-[var(--accent)]"
+              className={styles.modelSelect}
               value={modelId}
               onChange={(event) => setModelId(event.target.value)}
               disabled={loading}
@@ -110,10 +109,10 @@ export function ChatApp() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4">
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto pb-4">
+      <main className={styles.main}>
+        <div className={styles.messages}>
           {messages.length === 0 && !error ? (
-            <div className="m-auto max-w-sm rounded-2xl bg-[var(--panel)] px-5 py-4 text-center text-sm text-[var(--muted)] shadow-sm">
+            <div className={styles.empty}>
               Выбери модель и напиши сообщение. Для «Агент workdir» нужны
               Ollama и папка workdir; остальные модели идут через Polza
               (история до {MESSAGE_LIMIT} сообщений).
@@ -129,24 +128,17 @@ export function ChatApp() {
             />
           ))}
 
-          {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
+          {error ? <div className={styles.error}>{error}</div> : null}
 
           {loading ? (
-            <div className="text-sm text-[var(--muted)]">Модель думает…</div>
+            <div className={styles.loading}>Модель думает…</div>
           ) : null}
         </div>
 
-        <form
-          onSubmit={onSubmit}
-          className="sticky bottom-0 border-t border-[var(--line)] bg-[var(--panel)] pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-        >
-          <div className="flex items-end gap-2 rounded-2xl border border-[var(--line)] bg-white p-2 shadow-sm">
+        <form onSubmit={onSubmit} className={styles.composer}>
+          <div className={styles.composerInner}>
             <textarea
-              className="max-h-40 min-h-[2.75rem] flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none"
+              className={styles.input}
               placeholder="Напиши сообщение…"
               value={text}
               rows={1}
@@ -162,7 +154,7 @@ export function ChatApp() {
             <button
               type="submit"
               disabled={loading || !text.trim() || !modelId}
-              className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+              className={styles.send}
             >
               Отправить
             </button>
