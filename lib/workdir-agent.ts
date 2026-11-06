@@ -1,8 +1,9 @@
+import { z } from "zod";
+
 import type { ChatMessage } from "@/lib/chat";
 import { runWorkdirTool, workdirTools } from "@/lib/tools/fs-tools";
 
 const OLLAMA_URL = "http://127.0.0.1:11434/api/chat";
-const DEFAULT_OLLAMA_MODEL = "qwen3.5:4b";
 const MAX_ROUNDS = 8;
 
 const SYSTEM_PROMPT =
@@ -11,41 +12,51 @@ const SYSTEM_PROMPT =
   "Список дел обычно лежит в todo.json; сведения о пользователе могут быть в файлах вроде about-me.txt. " +
   "Отвечай кратко по-русски, без упоминания tools и внутренних деталей.";
 
-type OllamaToolCall = {
-  function?: {
-    name?: string;
-    arguments?: Record<string, unknown> | string;
-  };
-};
+const ollamaToolCallSchema = z.object({
+  function: z
+    .object({
+      name: z.string().optional(),
+      arguments: z
+        .union([z.record(z.string(), z.unknown()), z.string()])
+        .optional(),
+    })
+    .optional(),
+});
 
-type OllamaMessage = {
-  role: string;
-  content?: string | null;
-  tool_calls?: OllamaToolCall[];
-};
+const ollamaMessageSchema = z.object({
+  role: z.string(),
+  content: z.string().nullable().optional(),
+  tool_calls: z.array(ollamaToolCallSchema).optional(),
+});
 
-type OllamaChatResponse = {
-  message?: OllamaMessage;
-  error?: string;
-};
+const ollamaChatResponseSchema = z.object({
+  message: ollamaMessageSchema.optional(),
+  error: z.string().optional(),
+});
 
-function ollamaModel(): string {
-  return process.env.OLLAMA_MODEL?.trim() || DEFAULT_OLLAMA_MODEL;
-}
+type OllamaMessage = z.infer<typeof ollamaMessageSchema>;
 
 async function chatWithOllama(messages: OllamaMessage[]): Promise<OllamaMessage> {
+  
   const response = await fetch(OLLAMA_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: ollamaModel(),
+      model: process.env.OLLAMA_MODEL,
       messages,
       tools: workdirTools,
       stream: false,
     }),
   });
 
-  const data = (await response.json()) as OllamaChatResponse;
+  const raw: unknown = await response.json();
+  const parsed = ollamaChatResponseSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    throw new Error("Некорректный ответ Ollama");
+  }
+
+  const data = parsed.data;
 
   if (!response.ok) {
     throw new Error(data.error ?? `Ошибка Ollama (${response.status})`);
