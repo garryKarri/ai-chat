@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { SubmitEvent, useState } from "react";
 
 import { sendChat } from "@entities/chat/api/sendChat";
 import { MESSAGE_LIMIT } from "@entities/chat/model/constants";
@@ -18,7 +18,7 @@ export function ChatPage() {
 
   const selectedModel = MODELS.find((model) => model.id === modelId);
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const trimmed = text.trim();

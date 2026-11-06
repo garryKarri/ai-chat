@@ -1,4 +1,4 @@
-import { FormEvent } from "react";
+import { SubmitEvent } from "react";
 
 import type { ChatUiMessage } from "@entities/chat/model/types";
 import { ChatInput } from "@entities/chat/ui/chatInput/chatInput";
@@ -20,7 +20,7 @@ type ChatRoomProps = {
   loading?: boolean;
   onModelChange: (modelId: string) => void;
   onTextChange: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => void;
 };
 
 export function ChatRoom({

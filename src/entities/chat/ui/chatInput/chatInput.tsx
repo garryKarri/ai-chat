@@ -1,4 +1,4 @@
-import { FormEvent, KeyboardEvent } from "react";
+import { KeyboardEvent, SubmitEvent } from "react";
 
 import styles from "./chatInput.module.scss";
 
@@ -8,7 +8,7 @@ type ChatInputProps = {
   submitDisabled?: boolean;
   placeholder?: string;
   onChange: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => void;
 };
 
 export function ChatInput({
