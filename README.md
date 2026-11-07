@@ -26,19 +26,23 @@ pnpm dev
 
 Контракт тула: **промпт → URL**, без бинарника через LLM.
 
-Логика: `src/shared/lib/tools/image-gen.ts` → `POST https://polza.ai/api/v1/media` (модель по умолчанию Nano Banana `google/gemini-2.5-flash-image`), при `pending` — polling `GET /api/v1/media/{id}`, затем скачивание в `public/img/generated/` и возврат локального URL.
+Логика: `src/shared/lib/tools/image-gen.ts`. Режим задаётся `IMAGE_GEN_MODE`:
 
-Нужен `POLZA_API_KEY` в `.env.local`.
+- `polza` (по умолчанию) — `POST https://polza.ai/api/v1/media` (Nano Banana), polling, сохранение в `public/img/generated/`
+- `stub` — заглушка `/img/stub.png` без сети
+- `comfy_ui` — локальный ComfyUI (`COMFYUI_URL`, по умолчанию `http://127.0.0.1:8188`) по шаблону `templates/image_flux2_klein_4b_text_to_image.json`
+
+Для Polza нужен `POLZA_API_KEY`. Для ComfyUI — запущенный сервер с моделями из шаблона.
 
 ```bash
 pnpm image "рыжий кот в космосе"
-# → { "url": "http://localhost:3000/img/generated/….png", "source": "polza", ... }
+# → { "url": "http://localhost:3000/img/generated/….png", "source": "polza|comfy_ui", ... }
 
 IMAGE_GEN_MODE=stub pnpm image "без сети"
 # → http://localhost:3000/img/stub.png
-```
 
-Опционально позже: [Krita](https://krita.org) + AI Diffusion / ComfyUI как локальная альтернатива Polza.
+IMAGE_GEN_MODE=comfy_ui pnpm image "уютное кафе утром"
+```
 
 ## Todo через файловую систему (Ollama tooling)
 

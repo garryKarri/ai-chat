@@ -1,9 +1,10 @@
 /**
- * ДЗ урока 6: generateImage(prompt) → { url } через Polza Media API.
+ * generateImage(prompt) → { url }
  *
  * Запуск:
  *   pnpm image "рыжий кот в космосе"
  *   IMAGE_GEN_MODE=stub pnpm image "тест без сети"
+ *   IMAGE_GEN_MODE=comfy_ui pnpm image "уютное кафе утром"
  */
 
 import { readFileSync } from "node:fs";
@@ -26,8 +27,7 @@ function loadEnvFile(filename) {
     if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) {
       continue;
     }
-    const eq = trimmed.indexOf("=");
-    const key = trimmed.slice(0, eq).trim();
+    const eq = trimmed.indexOf("="); const key = trimmed.slice(0, eq).trim();
     let value = trimmed.slice(eq + 1).trim();
     if (
       (value.startsWith('"') && value.endsWith('"')) ||
