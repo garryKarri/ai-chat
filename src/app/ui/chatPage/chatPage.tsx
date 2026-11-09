@@ -67,11 +67,11 @@ export function ChatPage() {
   return (
     <ChatRoom
       title="Чат с выбором модели"
-      subtitle={`История до ${MESSAGE_LIMIT} сообщений · workdir через Ollama · картинки через Polza Media`}
+      subtitle={`История до ${MESSAGE_LIMIT} сообщений · workdir через Ollama · картинки/аудио через Polza`}
       models={MODELS}
       modelId={modelId}
       messages={messages}
-      emptyText={`Выбери модель и напиши сообщение. «Агент workdir» — Ollama + workdir; «Генератор изображений» — промпт → картинка; остальные модели — Polza (история до ${MESSAGE_LIMIT} сообщений).`}
+      emptyText={`Выбери модель и напиши сообщение. «Агент workdir» — Ollama + workdir; «Генератор изображений» — промпт → картинка; «Генератор аудио» — текст → озвучка; остальные модели — Polza (история до ${MESSAGE_LIMIT} сообщений).`}
       text={text}
       error={error}
       loading={loading}

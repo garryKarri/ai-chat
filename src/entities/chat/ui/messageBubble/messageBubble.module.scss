@@ -57,3 +57,16 @@
   margin-top: 0.35rem;
   border-radius: 0.5rem;
 }
+
+.audio {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  margin-top: 0.35rem;
+}
+
+.link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}

@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 
 import { MESSAGE_LIMIT } from "@entities/chat/model/constants";
 import type { ChatMessage } from "@entities/chat/model/types";
+import { runAudioGenChat } from "@shared/lib/audio-gen-chat";
 import { runImageGenAgent } from "@shared/lib/image-gen-agent";
 import { runImageGenChat } from "@shared/lib/image-gen-chat";
 import {
+  isAudioGenModel,
   isImageGenAgentModel,
   isImageGenModel,
   isWorkdirAgentModel,
@@ -180,6 +182,18 @@ export async function POST(request: Request) {
         error instanceof Error
           ? error.message
           : "Ошибка генерации изображения";
+
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
+  }
+
+  if (isAudioGenModel(model)) {
+    try {
+      const reply = await runAudioGenChat(messages);
+      return NextResponse.json({ reply });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Ошибка генерации аудио";
 
       return NextResponse.json({ error: message }, { status: 502 });
     }

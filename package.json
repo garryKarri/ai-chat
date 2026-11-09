@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "todo": "node scripts/todo-agent.mjs",
-    "image": "node --experimental-strip-types scripts/generate-image.mjs"
+    "image": "node --experimental-strip-types scripts/generate-image.mjs",
+    "audio": "node --experimental-strip-types scripts/generate-audio.mjs"
   },
   "dependencies": {
     "next": "16.4.2",
