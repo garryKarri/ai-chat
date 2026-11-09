@@ -17,12 +17,12 @@ pnpm dev
 ## Как устроено
 
 1. Страница держит `messages` и обрезает до `MESSAGE_LIMIT` (сейчас 10).
-2. `POST /api/chat` принимает `{ model, messages }`. Модели Polza идут в Polza; пункт «Агент workdir» — локальный FS-агент через Ollama.
+2. `POST /api/chat` принимает `{ model, messages }`. Модели Polza идут в Polza; `local/*` — локальные режимы (Ollama / генерация картинок).
 3. Ответ ассистента снова добавляется в `messages` с тем же лимитом.
 
 Список моделей: `src/shared/lib/models.ts`. Подставь id из кабинета Polza.
 
-## Генерация картинки (hme_cl_6)
+## Генерация картинки
 
 Контракт тула: **промпт → URL**, без бинарника через LLM.
 
@@ -30,9 +30,14 @@ pnpm dev
 
 - `polza` (по умолчанию) — `POST https://polza.ai/api/v1/media` (Nano Banana), polling, сохранение в `public/img/generated/`
 - `stub` — заглушка `/img/stub.png` без сети
-- `comfy_ui` — локальный ComfyUI (`COMFYUI_URL`, по умолчанию `http://127.0.0.1:8188`) по шаблону `templates/image_flux2_klein_4b_text_to_image.json`
+- `comfy_ui` — локальный ComfyUI (`COMFYUI_URL`, по умолчанию `http://127.0.0.1:8188`) + Flux 2 Klein по шаблону `templates/image_flux2_klein_4b_text_to_image.json`
 
 Для Polza нужен `POLZA_API_KEY`. Для ComfyUI — запущенный сервер с моделями из шаблона.
+
+В чате:
+
+- **Генератор изображений** — сразу `промпт → картинка` (без LLM)
+- **Агент картинок (Ollama)** — модель через Ollama сама вызывает tool `generate_image` (`src/shared/lib/image-gen-agent.ts`)
 
 ```bash
 pnpm image "рыжий кот в космосе"
@@ -43,6 +48,8 @@ IMAGE_GEN_MODE=stub pnpm image "без сети"
 
 IMAGE_GEN_MODE=comfy_ui pnpm image "уютное кафе утром"
 ```
+
+Для агента картинок нужны `ollama serve`, модель из `OLLAMA_MODEL` (с tooling) и тот же `IMAGE_GEN_MODE` (часто `comfy_ui`).
 
 ## Todo через файловую систему (Ollama tooling)
 

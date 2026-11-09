@@ -512,7 +512,7 @@ export async function generateImage(prompt: string): Promise<GenerateImageResult
   return generateViaPolza(trimmed);
 }
 
-/** Описание tool для будущего подключения к агенту (Ollama tools). */
+/** Описание tool для Ollama-агента картинок. */
 export const generateImageTool = {
   type: "function" as const,
   function: {

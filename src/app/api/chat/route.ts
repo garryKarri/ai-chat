@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 
 import { MESSAGE_LIMIT } from "@entities/chat/model/constants";
 import type { ChatMessage } from "@entities/chat/model/types";
+import { runImageGenAgent } from "@shared/lib/image-gen-agent";
 import { runImageGenChat } from "@shared/lib/image-gen-chat";
-import { isImageGenModel, isWorkdirAgentModel } from "@shared/lib/models";
+import {
+  isImageGenAgentModel,
+  isImageGenModel,
+  isWorkdirAgentModel,
+} from "@shared/lib/models";
 import { runWorkdirAgent } from "@shared/lib/workdir-agent";
 
 type ChatRequestBody = {
@@ -137,13 +142,19 @@ export async function POST(request: Request) {
     );
   }
 
-  if (isWorkdirAgentModel(model)) {
+  if (isWorkdirAgentModel(model) || isImageGenAgentModel(model)) {
     try {
-      const reply = await runWorkdirAgent(messages);
+      const reply = isImageGenAgentModel(model)
+        ? await runImageGenAgent(messages)
+        : await runWorkdirAgent(messages);
       return NextResponse.json({ reply });
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Ошибка агента workdir";
+        error instanceof Error
+          ? error.message
+          : isImageGenAgentModel(model)
+            ? "Ошибка агента картинок"
+            : "Ошибка агента workdir";
       const offline =
         message.includes("fetch") ||
         message.includes("ECONNREFUSED") ||
